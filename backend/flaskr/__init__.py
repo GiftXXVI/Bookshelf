@@ -58,6 +58,13 @@ def create_app(test_config=None):
     #         and should follow API design principles regarding method and route.
     #         Response body keys: 'success'
     # TEST: When completed, you will be able to click on stars to update a book's rating and it will persist after refresh
+    @app.route('/books/<int:book_id>', methods=['PATCH'])
+    def update_rating(book_id):
+        book = Book.query.filter_by(id=book_id).first()
+        book.rating = request.form.get('rating')
+        book.update()
+        book.cleanup()
+
 
     # @TODO: Write a route that will delete a single book.
     #        Response body keys: 'success', 'deleted'(id of deleted book), 'books' and 'total_books'

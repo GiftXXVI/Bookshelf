@@ -54,6 +54,9 @@ class Book(db.Model):
         db.session.delete(self)
         db.session.commit()
 
+    def cleanup(self):
+        db.session.close()
+
     def format(self):
         return {
             "id": self.id,

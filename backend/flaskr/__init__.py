@@ -44,8 +44,11 @@ def create_app(test_config=None):
         start = (page - 1) * 10
         end = start + 10
 
-        books = Book.query.all()
+        books = Book.query.order_by(Book.id).all()
         formatted_books = [book.format() for book in books]
+
+        if len(formatted_books) == 0:
+            abort(404)
 
         return jsonify({
             'success': True,
@@ -64,7 +67,6 @@ def create_app(test_config=None):
         book.rating = request.form.get('rating')
         book.update()
         book.cleanup()
-
 
     # @TODO: Write a route that will delete a single book.
     #        Response body keys: 'success', 'deleted'(id of deleted book), 'books' and 'total_books'

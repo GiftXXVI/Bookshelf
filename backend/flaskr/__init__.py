@@ -4,7 +4,9 @@ from flask_sqlalchemy import SQLAlchemy  # , or_
 from flask_cors import CORS
 import random
 
-from models import setup_db, Book
+from sqlalchemy.sql.expression import true
+
+from models import setup_db, Book, get_db
 
 BOOKS_PER_SHELF = 8
 
@@ -38,35 +40,69 @@ def create_app(test_config=None):
     #         update the frontend to handle additional books in the styling and pagination
     #         Response body keys: 'success', 'books' and 'total_books'
     # TEST: When completed, the webpage will display books including title, author, and rating shown as stars
+    #curl http://127.0.0.1:5000/books
     @app.route('/books', methods=['GET'])
     def get_books():
         page = request.args.get('page', 1, type=int)
         start = (page - 1) * 10
         end = start + 10
 
-        books = Book.query.order_by(Book.id).all()
-        formatted_books = [book.format() for book in books]
+        try:
+            books = Book.query.order_by(Book.id).all()
+            formatted_books = [book.format() for book in books]
+        except:
+            abort(500)
+        finally:
+            if len(formatted_books[start:end]) == 0:
+                abort(404)
+            return jsonify({
+                'success': True,
+                'books': formatted_books[start:end],
+                'total_books': len(formatted_books)
+            })
 
-        if len(formatted_books) == 0:
+    @app.route('/books/<int:book_id>', methods=['GET'])
+    def get_book(book_id):
+        book = Book.query.filter_by(id=book_id).first()
+        if book is None:
             abort(404)
-
-        return jsonify({
-            'success': True,
-            'books': formatted_books[start:end],
-            'total_books': len(formatted_books)
-        })
-
+        else:
+            return jsonify({'success': True,
+                            'book': book.format,
+                            'total_books': 1})
     # @TODO: Write a route that will update a single book's rating.
     #         It should only be able to update the rating, not the entire representation
     #         and should follow API design principles regarding method and route.
     #         Response body keys: 'success'
     # TEST: When completed, you will be able to click on stars to update a book's rating and it will persist after refresh
+
+    #curl http://127.0.0.1:5000/books/8 -X PATCH -H "Content-Type: application/json" -d '{"rating":"1"}'
     @app.route('/books/<int:book_id>', methods=['PATCH'])
-    def update_rating(book_id):
-        book = Book.query.filter_by(id=book_id).first()
-        book.rating = request.form.get('rating')
-        book.update()
-        book.cleanup()
+    def update_book(book_id):
+        body = request.get_json()
+        db = get_db()
+        error = False
+        try:
+            book = Book.query.filter_by(id=book_id).one_or_none()
+
+            if book is None:
+                abort(404)
+
+            if 'rating' in body:
+                book.rating = int(body.get('rating'))
+                book.update()
+        except:
+            db.session.rollback()
+            error = True
+        finally:
+            db.session.close()
+            if not error:
+                return jsonify({
+                    'success': True,
+                    'id': book_id
+                })
+            else:
+                abort(400)
 
     # @TODO: Write a route that will delete a single book.
     #        Response body keys: 'success', 'deleted'(id of deleted book), 'books' and 'total_books'

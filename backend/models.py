@@ -23,6 +23,8 @@ def setup_db(app, database_path=database_path):
     db.init_app(app)
     db.create_all()
 
+def get_db():
+    return db
 
 """
 Book
@@ -53,9 +55,6 @@ class Book(db.Model):
     def delete(self):
         db.session.delete(self)
         db.session.commit()
-
-    def cleanup(self):
-        db.session.close()
 
     def format(self):
         return {

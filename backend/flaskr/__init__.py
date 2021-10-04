@@ -80,6 +80,10 @@ def create_app(test_config=None):
 
             if book is not None:
                 book.delete()
+        except:
+            abort(422)
+        finally:
+            if book is not None:
                 selection = Book.query.order_by(Book.id).all()
                 current_books = paginate_books(request, selection)
 
@@ -91,10 +95,7 @@ def create_app(test_config=None):
                 })
             else:
                 abort(404)
-        except:
-            if book is None:
-                abort(422)
-
+                
     @app.route('/books', methods=['POST'])
     def create_book():
         body = request.get_json()

@@ -4,6 +4,8 @@ from flask_sqlalchemy import SQLAlchemy  # , or_
 from flask_cors import CORS
 import random
 
+from sqlalchemy.sql.operators import notendswith_op
+
 from models import setup_db, Book
 
 BOOKS_PER_SHELF = 8
@@ -76,22 +78,22 @@ def create_app(test_config=None):
         try:
             book = Book.query.filter(Book.id == book_id).one_or_none()
 
-            if book is None:
+            if book is not None:
+                book.delete()
+                selection = Book.query.order_by(Book.id).all()
+                current_books = paginate_books(request, selection)
+
+                return jsonify({
+                    'success': True,
+                    'deleted': book_id,
+                    'books': current_books,
+                    'total_books': len(Book.query.all())
+                })
+            else:
                 abort(404)
-
-            book.delete()
-            selection = Book.query.order_by(Book.id).all()
-            current_books = paginate_books(request, selection)
-
-            return jsonify({
-                'success': True,
-                'deleted': book_id,
-                'books': current_books,
-                'total_books': len(Book.query.all())
-            })
-
         except:
-            abort(422)
+            if book is None:
+                abort(422)
 
     @app.route('/books', methods=['POST'])
     def create_book():

@@ -75,27 +75,21 @@ def create_app(test_config=None):
 
     @app.route('/books/<int:book_id>', methods=['DELETE'])
     def delete_book(book_id):
-        try:
-            book = Book.query.filter(Book.id == book_id).one_or_none()
+        book = Book.query.filter(Book.id == book_id).one_or_none()
+        if book is not None:
+            book.delete()
+            selection = Book.query.order_by(Book.id).all()
+            current_books = paginate_books(request, selection)
 
-            if book is not None:
-                book.delete()
-        except:
+            return jsonify({
+                'success': True,
+                'deleted': book_id,
+                'books': current_books,
+                'total_books': len(Book.query.all())
+            })
+        else:
             abort(422)
-        finally:
-            if book is not None:
-                selection = Book.query.order_by(Book.id).all()
-                current_books = paginate_books(request, selection)
 
-                return jsonify({
-                    'success': True,
-                    'deleted': book_id,
-                    'books': current_books,
-                    'total_books': len(Book.query.all())
-                })
-            else:
-                abort(404)
-                
     @app.route('/books', methods=['POST'])
     def create_book():
         body = request.get_json()
@@ -120,6 +114,26 @@ def create_app(test_config=None):
 
         except:
             abort(422)
+
+    @app.route('/books/search', methods=['GET'])
+    def search_book():
+        search_term = request.args.get('search_term', None)
+
+        if search_term is None:
+            abort(400)
+        else:
+            fsearch = f'%{search_term}%'
+            selection = Book.query.filter(Book.title.ilike(fsearch)).all()
+            current_books = paginate_books(request, selection)
+            if len(current_books) == 0:
+                abort(404)
+            else:
+                total_books = len([book.format() for book in selection])
+                return jsonify({
+                    'success': True,
+                    'books': current_books,
+                    'total_books': total_books
+                })
 
     @app.errorhandler(404)
     def not_found(error):

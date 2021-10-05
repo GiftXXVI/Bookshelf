@@ -77,14 +77,14 @@ class BookTestCase(unittest.TestCase):
         self.assertEqual(data['message'], 'bad request')
 
     def test_delete_book(self):
-        res = self.client().delete('/books/1')
+        res = self.client().delete('/books/4')
         data = json.loads(res.data)
-        book = Book.query.filter(Book.id == 1).one_or_none()
+        book = Book.query.filter(Book.id == 4).one_or_none()
 
         self.assertEqual(res.status_code, 200)
         self.assertEqual(data['success'], True)
-        self.assertEqual(data['deleted'], 1)
-        self.assertTrue(data['totalbooks'])
+        self.assertEqual(data['deleted'], 4)
+        self.assertTrue(data['total_books'])
         self.assertTrue(data['books'])
         self.assertEqual(book, None)
 
@@ -93,7 +93,7 @@ class BookTestCase(unittest.TestCase):
         data = json.loads(res.data)
 
         self.assertEqual(res.status_code, 422)
-        self.assertEqual(data['success'], True)
+        self.assertEqual(data['success'], False)
         self.assertEqual(data['message'], 'unprocessable')
 
     def test_create_new_book(self):
@@ -112,6 +112,31 @@ class BookTestCase(unittest.TestCase):
         self.assertEqual(res.status_code, 405)
         self.assertEqual(data['success'], False)
         self.assertEqual(data['message'], 'method not allowed')
+
+    def test_search_book_by_title(self):
+        res = self.client().get('/books/search?search_term=Boys')
+        data = json.loads(res.data)
+
+        self.assertEqual(res.status_code, 200)
+        self.assertEqual(data['success'], True)
+        self.assertTrue(data['total_books'])
+        self.assertTrue(data['books'])
+
+    def test_404_if_search_term_not_found(self):
+        res = self.client().get('/books/search?search_term=2574310660')
+        data = json.loads(res.data)
+
+        self.assertEqual(res.status_code, 404)
+        self.assertEqual(data['success'], False)
+        self.assertEqual(data['message'], 'resource not found')
+
+    def test_400_if_search_term_not_sent(self):
+        res = self.client().get('/books/search')
+        data = json.loads(res.data)
+
+        self.assertEqual(res.status_code, 400)
+        self.assertEqual(data['success'], False)
+        self.assertEqual(data['message'], 'bad request')
 
 
 # Make the tests conveniently executable

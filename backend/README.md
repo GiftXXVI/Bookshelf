@@ -194,14 +194,86 @@ curl -X POST -H "Content-Type: application/json" -d '{"title":"The Midnight Libr
 }
 ```
 
-### PATCH
+### PATCH `/books/{book_id}`
 
-- `/books/{book_id}` : Used to update the rating of a book
+- General : Used to update the rating of a book. Returns the success value of the operation and the id of the book whose rating has been modified.
 
-### PUT
+- Sample URL:
 
-- `/books/{book_id}` : Used to update all attributes of a book simultaneously.
+```bash
+curl http://127.0.0.1:5000/books/25 -X PATCH -H "Content-Type: application/json" -d '{"rating":"3"}'
+```
 
-### DELETE
+```
+{
+  "id": 25,
+  "success": true
+}
+```
 
-- `/books/{book_id}` : Used to delete a book
+### DELETE `/books/{book_id}`
+
+- General : Used to delete a book by providing it's id. Returns the id of the deleted book, success value, total books and current list of books after completing the operation.
+
+* Sample URL:
+```bash
+curl -X DELETE http://127.0.0.1:5000/books/23?page=2
+```
+
+```
+{
+  "books": [
+    {
+      "author": "Gina Apostol", 
+      "id": 9, 
+      "rating": 5, 
+      "title": "Insurrecto: A Novel"
+    }, 
+    {
+      "author": "Tayari Jones", 
+      "id": 10, 
+      "rating": 5, 
+      "title": "An American Marriage"
+    }, 
+    {
+      "author": "Jordan B. Peterson", 
+      "id": 11, 
+      "rating": 5, 
+      "title": "12 Rules for Life: An Antidote to Chaos"
+    }, 
+    {
+      "author": "Kiese Laymon", 
+      "id": 12, 
+      "rating": 1, 
+      "title": "Heavy: An American Memoir"
+    }, 
+    {
+      "author": "Emily Giffin", 
+      "id": 13, 
+      "rating": 4, 
+      "title": "All We Ever Wanted"
+    }, 
+    {
+      "author": "Jose Andres", 
+      "id": 14, 
+      "rating": 4, 
+      "title": "We Fed an Island"
+    }, 
+    {
+      "author": "Rachel Kushner", 
+      "id": 15, 
+      "rating": 1, 
+      "title": "The Mars Room"
+    }, 
+    {
+      "author": "Gregory Blake Smith", 
+      "id": 16, 
+      "rating": 2, 
+      "title": "The Maze at Windermere"
+    }
+  ], 
+  "deleted": 23, 
+  "success": true, 
+  "total_books": 17
+}
+```

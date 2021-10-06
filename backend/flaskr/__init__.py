@@ -67,6 +67,7 @@ def create_app(test_config=None):
             book.update()
 
             return jsonify({
+                'id': book_id,
                 'success': True,
             })
 
